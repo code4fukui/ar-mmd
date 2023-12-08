@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>AR MMD</title>
+</head>
+<body>
+
+<header>
+  <h1>AR MMD</h1>
+  Model: <a href=https://twitter.com/nakasis_>中野シスターズMMDモデル</a><br>
+  Motion: <a href=https://bowlroll.net/file/22865>投げるZIP(投球モーション) - BowlRoll</a><br>
+  LIB: <a href="https://github.com/code4fukui/egxr.js/">egxr.js</a><br>
+  APP: <a href="https://github.com/code4fukui/ar-mmd/">src on GitHub</a><br>
+</header>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://code4fukui.github.io/three.js/build/three.module.js",
+    "three/addons/": "https://code4fukui.github.io/three.js/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import { THREE, scene, camera, renderer } from "https://code4fukui.github.io/egxr.js/egxr.js";
+import { AsyncMMDLoader } from "./AsyncMMDLoader.js";
+import { AsyncGLTFLoader } from "./AsyncGLTFLoader.js";
+import { MMDAnimationHelper } from "https://code4fukui.github.io/three.js_examples/jsm/animation/MMDAnimationHelper.js";
+import { OrbitControls } from 'https://code4fukui.github.io/three.js_examples/jsm/controls/OrbitControls.js';
+
+renderer.outputEncoding = THREE.sRGBEncoding;
+// three.jsでは、テクスチャのエンコーディングタイプを設定できます。例えば、sRGBエンコーディングを使用する場合は `texture.encoding = THREE.sRGBEncoding;` のように設定します。
+
+const helper = new MMDAnimationHelper();
+
+const loader = new AsyncMMDLoader();
+
+//'Kano_MMD/Kano_MMD.pmx',
+const pathpmx = "Naka_MMD/Naka_MMD_準標準.pmx";
+const mesh = await loader.loadMMD(pathpmx);
+scene.add(mesh);
+const sc = 0.08;
+mesh.scale.set(sc, sc, sc);
+mesh.position.z = -3;
+mesh.position.y = -1.5;
+
+//const path = "例えば、今此処に置かれた花に　モーション/モーション.vmd";
+const pathvmd = "投げるZIP/nageru.vmd";
+const animation = await loader.loadAnimation(pathvmd, mesh);
+helper.add(mesh, { animation, physics: false });
+const mixer = helper.objects.get(mesh).mixer;
+const action = mixer.clipAction(animation);
+action.clampWhenFinished = true;
+action.loop = THREE.LoopOnce;
+console.log(action)
+//action.setLoop(false);
+
+/*
+//const pathvpd = "投げるZIP/omake/igi.vpd";
+//const pathvpd = "投げるZIP/omake/minosan.vpd";
+const pathvpd = "投げるZIP/omake/moepuro.vpd";
+const pose = await loader.loadVPD(pathvpd, false);
+helper.pose( mesh, pose, { resetPose: true });
+*/
+
+//camera.position.y = 1.1;
+
+let status = 0;
+let cnt = 0;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+console.log(controls);
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  helper.update(clock.getDelta());
+  if (status == 0) {
+    if (action.paused) {
+      status = 1;
+      cnt = 60;
+    }
+  } else if (status == 1) {
+    if (!cnt--)  {
+      action.reset();
+      status = 0;
+    }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+const pathglb = "./koshinoken-m.glb";
+
+const gltfloader = new AsyncGLTFLoader();
+const gltf = await gltfloader.load(pathglb);
+const gltfs = gltf.scene;
+gltfs.position.z = -5.5;
+gltfs.position.x = .6;
+gltfs.position.y = -1.6;
+gltfs.scale.x = gltfs.scale.y = gltfs.scale.z = 5;
+scene.add(gltfs);
+
+</script>
+</body>
+</html>
