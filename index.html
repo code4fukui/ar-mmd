@@ -26,17 +26,19 @@ import { AsyncMMDLoader } from "./AsyncMMDLoader.js";
 import { AsyncGLTFLoader } from "./AsyncGLTFLoader.js";
 import { MMDAnimationHelper } from "https://code4fukui.github.io/three.js_examples/jsm/animation/MMDAnimationHelper.js";
 import { OrbitControls } from 'https://code4fukui.github.io/three.js_examples/jsm/controls/OrbitControls.js';
-
-renderer.outputEncoding = THREE.sRGBEncoding;
-// three.jsでは、テクスチャのエンコーディングタイプを設定できます。例えば、sRGBエンコーディングを使用する場合は `texture.encoding = THREE.sRGBEncoding;` のように設定します。
+import { updateEncodingModel } from "./updateEncoding.js";
 
 const helper = new MMDAnimationHelper();
 
 const loader = new AsyncMMDLoader();
 
+//renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputEncoding = THREE.LinearEncoding;
+
 //'Kano_MMD/Kano_MMD.pmx',
-const pathpmx = "Naka_MMD/Naka_MMD_準標準.pmx";
+const pathpmx = "Naka_MMD/Naka_MMD_qstd.pmx";
 const mesh = await loader.loadMMD(pathpmx);
+updateEncodingModel(mesh, THREE.LinearEncoding);
 scene.add(mesh);
 const sc = 0.08;
 mesh.scale.set(sc, sc, sc);
@@ -44,7 +46,7 @@ mesh.position.z = -3;
 mesh.position.y = -1.5;
 
 //const path = "例えば、今此処に置かれた花に　モーション/モーション.vmd";
-const pathvmd = "投げるZIP/nageru.vmd";
+const pathvmd = "nageruZIP/nageru.vmd";
 const animation = await loader.loadAnimation(pathvmd, mesh);
 helper.add(mesh, { animation, physics: false });
 const mixer = helper.objects.get(mesh).mixer;
@@ -88,16 +90,20 @@ renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
 });
 
-const pathglb = "./koshinoken-m.glb";
+{
+  const pathglb = "./koshinoken-m.glb";
 
-const gltfloader = new AsyncGLTFLoader();
-const gltf = await gltfloader.load(pathglb);
-const gltfs = gltf.scene;
-gltfs.position.z = -5.5;
-gltfs.position.x = .6;
-gltfs.position.y = -1.6;
-gltfs.scale.x = gltfs.scale.y = gltfs.scale.z = 5;
-scene.add(gltfs);
+  const gltfloader = new AsyncGLTFLoader();
+  const gltf = await gltfloader.load(pathglb);
+  console.log(gltf.scene);
+
+  const gltfs = updateEncodingModel(gltf.scene, THREE.sRGBEncoding); // 効かない・・・
+  gltfs.position.z = -5.5;
+  gltfs.position.x = .6;
+  gltfs.position.y = -1.6;
+  gltfs.scale.x = gltfs.scale.y = gltfs.scale.z = 5;
+  scene.add(gltfs);
+}
 
 </script>
 </body>
