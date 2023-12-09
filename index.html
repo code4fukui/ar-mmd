@@ -32,8 +32,11 @@ const helper = new MMDAnimationHelper();
 
 const loader = new AsyncMMDLoader();
 
-//renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.outputEncoding = THREE.LinearEncoding;
+if (location.hash == "#srgb") {
+  renderer.outputEncoding = THREE.sRGBEncoding;
+} else {
+  renderer.outputEncoding = THREE.LinearEncoding;
+}
 
 //'Kano_MMD/Kano_MMD.pmx',
 const pathpmx = "Naka_MMD/Naka_MMD_qstd.pmx";
